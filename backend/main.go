@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -21,6 +22,14 @@ func main() {
 	if err := pool.Ping(ctx); err != nil {
 		log.Fatalf("Unable to ping database: %v\n", err)
 	}
+
+	http.HandleFunc("GET /projects/{projectID}/tasks", func(w http.ResponseWriter, r *http.Request) {
+		projectID := r.PathValue("projectID")
+		fmt.Fprintf(w, "Tasks for project %s", projectID)
+	})
+
+	log.Println("Server is running on http://localhost:8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 
 	rows, err := pool.Query(ctx,
 		"SELECT id, title, status FROM tasks WHERE project_id = $1",
